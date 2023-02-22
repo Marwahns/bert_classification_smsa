@@ -30,7 +30,7 @@ class MultiClassModel(pl.LightningModule):
         self.pre_classifier = nn.Linear(768, 768)
         self.dropout = nn.Dropout(dropout)
 
-        # jumlah label = 5
+        ## Jumlah label = 5
         self.classifier = nn.Linear(768, n_out)
 
         self.lr = lr
@@ -44,28 +44,28 @@ class MultiClassModel(pl.LightningModule):
         #                   num_classes = self.num_classes)
         # self.precission_recall = PrecisionRecallCurve(task = "multiclass", num_classes = self.num_classes)
 
-    # Model
+    ## Model
     def forward(self, input_ids):
         bert_out = self.bert(input_ids = input_ids)
         hidden_state = bert_out[0]
         pooler = hidden_state[:, 0]
-        # Outout size (batch size = 30 baris, sequence length = 100 kata / token, hidden_size = 768 tensor jumlah vector representation dari bert)
+        ## Outout size (batch size = 30 baris, sequence length = 100 kata / token, hidden_size = 768 tensor jumlah vector representation dari bert)
 
         pooler = self.pre_classifier(pooler)
-        # pre classifier untuk mentransfer weight output ke epoch selanjutnya
+        ## pre classifier untuk mentransfer weight output ke epoch selanjutnya
         pooler = torch.nn.Tanh()(pooler)
-        # kontrol hasil pooler min -1 max 1
+        ## kontrol hasil pooler min -1 max 1
 
 
         pooler = self.dropout(pooler)
         output = self.classifier(pooler)
-        # classifier untuk memprojeksikan hasil pooler (768) ke jumlah label (5)
+        ## classifier untuk memprojeksikan hasil pooler (768) ke jumlah label (5)
 
         return output
 
     def configure_optimizers(self):
-        # Proses training lebih cepat
-        # Tidak memakan memori berlebih
+        ## Proses training lebih cepat
+        ## Tidak memakan memori berlebih
         optimizer = torch.optim.Adam(self.parameters(), lr = self.lr)
         return optimizer
 
@@ -73,7 +73,7 @@ class MultiClassModel(pl.LightningModule):
         x_input_ids, y = train_batch
         
         out = self(input_ids = x_input_ids)
-        # ke tiga parameter di input dan diolah oleh method / function forward
+        ## ke tiga parameter di input dan diolah oleh method / function forward
 
         loss = self.criterion(out, target = y.float())
 
@@ -94,13 +94,13 @@ class MultiClassModel(pl.LightningModule):
         self.log("loss", loss)
 
         # return {"loss": loss, "predictions": out, "F1": f1_score, "labels": y}
-        return {"loss": loss, "F1": f1_s}
+        return {"loss": loss, "F1": f1_s, "labels": y}
 
     def validation_step(self, valid_batch, batch_idx):
         x_input_ids, y = valid_batch
         
         out = self(input_ids = x_input_ids)
-        # ke tiga parameter di input dan diolah oleh method / function forward
+        ## ke tiga parameter di input dan diolah oleh method / function forward
 
         loss = self.criterion(out, target = y.float())
 
@@ -121,7 +121,7 @@ class MultiClassModel(pl.LightningModule):
         x_input_ids, y = pred_batch
         
         out = self(input_ids = x_input_ids)
-        # ke tiga parameter di input dan diolah oleh method / function forward
+        ## ke tiga parameter di input dan diolah oleh method / function forward
         pred = out
         true = y
 
@@ -129,13 +129,47 @@ class MultiClassModel(pl.LightningModule):
 
     def training_epoch_end(self, outputs):
         f1_scores = []
-        for output in outputs:
-            print(output)
-            # for f1_s in output["F1"]:
-            #     f1_scores.append(f1_s)
+        # loss = []
 
-        # plt.plot(f1_scores,color='r')
-        # plt.savefig('f1_score.png') # menyimpan gambar
+        ## V1
+        # for output in outputs:
+        #     for f1_s in output["F1"]:
+        #         f1_scores.append(f1_s)
+        # plt.plot(f1_scores, color='r')
+        
+        ## V2
+        for output in outputs:
+            # print(output)
+            ## output
+            ## {'loss': tensor(0.0489, device='cuda:0'), 'F1': 1.0, 'labels': tensor([[0, 1, 0],
+            ## [1, 0, 0],
+            ## [1, 0, 0],
+            ## [1, 0, 0],
+            ## [1, 0, 0],
+            ## [1, 0, 0],
+            ## [1, 0, 0],
+            ## [0, 0, 1],
+            ## [0, 0, 1],
+            ## [1, 0, 0]], device='cuda:0')}
+
+            ## Nilai F1 Score training
+            f1_s = output['F1']
+            # loss_s = output['loss']
+            f1_scores.append(f1_s)
+            # loss.append(loss_s)
+
+        ## Jumlah epoch
+        # epochs = range(1,11)
+        epochs = range(len(f1_scores))
+
+        ## Plot nilai F1 Score
+        plt.plot(epochs, f1_scores)
+        # plt.plot(epochs, loss, 'r', label='Loss')
+        plt.title('Training F1 Score')
+        plt.xlabel('Epochs')
+        plt.ylabel('F1 Score')
+        plt.show()
+        plt.savefig('f1_score.png') # menyimpan gambar
 
         # labels = []
         # predictions = []
@@ -149,12 +183,12 @@ class MultiClassModel(pl.LightningModule):
         # labels = torch.stack(labels).int()
         # predictions = torch.stack(predictions)
 
-        # # Hitung akurasi
+        ## Hitung akurasi
         
         # # accuracy = Accuracy(task = "multiclass", num_classes = self.num_classes)
         # acc = self.accuracy(predictions, labels)
         # f1_score = self.f1(predictions, labels)
-        # # Print Akurasinya
+        ## Print Akurasinya
         # print("Overall Training Accuracy : ", acc , "| F1 Score : ", f1_score)
 
     # def on_predict_epoch_end(self, outputs):

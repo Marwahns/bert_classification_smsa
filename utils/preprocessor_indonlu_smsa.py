@@ -4,7 +4,7 @@ from datasets import load_dataset
 
 import pytorch_lightning as pl
 
-# https://huggingface.co/datasets/indonlp/indonlu
+## https://huggingface.co/datasets/indonlp/indonlu
 
 from transformers import BertTokenizer
 
@@ -16,7 +16,8 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
                  n_classes,
                  batch_size):
         super(PreprocessorIndoNLU, self).__init__()
-        # Superclass pytorch lightning data module wajib
+
+        ## Superclass pytorch lightning data module wajib
         self.tokenizer = BertTokenizer.from_pretrained('indolem/indobert-base-uncased')
         self.max_length = max_length
         self.n_classes = n_classes
@@ -26,13 +27,13 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
     def load_data(self, dataset_type = "train"):
         indonlu_data = load_dataset("indonlp/indonlu", "smsa", split = dataset_type)
 
-        # # Mengetahui kolom yang ada
+        ## Mengetahui kolom yang ada
         # print(indonlu_data)
 
-        # Tipe data array
-        # List, Dictionary, Set, Tuple
+        ##Tipe data array
+        ##List, Dictionary, Set, Tuple
         
-        # x = kalimat, y = label
+        ## x = kalimat, y = label
         x_all, y_all = [], []
         for dt in indonlu_data:
             x = dt["text"]
@@ -46,24 +47,23 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
                                padding = "max_length",
                                truncation = True)["input_ids"]
             
-            # Dijadikan teks
+            ## Dijadikan teks
             x_all.append(x)
             
             # y = 3
             # y = [0, 0, 0, 1, 0]
 
-            # Dijadikan label
+            ## Dijadikan label
             y_bin = [0] * self.n_classes
             y_bin[y] = 1
             y = y_bin
             y_all.append(y)
         
-        # Menjadikan List menjadi tensor
+        ## Menjadikan List menjadi tensor
         x_tensor = torch.tensor(x_all)
-        # input_ids
         y_tensor = torch.tensor(y_all)
         
-        # tensor di bungkus menjadi tensor dataset
+        ## tensor di bungkus menjadi tensor dataset
         tensor_dataset = TensorDataset(x_tensor, y_tensor)
         return tensor_dataset
     
