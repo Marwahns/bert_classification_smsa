@@ -171,7 +171,7 @@ class MultiClassModel(pl.LightningModule):
         ## Plot nilai F1 Score
         plt.plot(epochs, f1_scores, 'b', label='F1 Score')
         plt.plot(epochs, loss, 'r', label='Loss')
-        plt.xlabel('iterations')
+        plt.xlabel('Epoch(Number of Sentences)')
         # plt.ylabel('F1 Score')
 
         ## Put a legend to the right of the current axis
