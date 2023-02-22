@@ -129,7 +129,7 @@ class MultiClassModel(pl.LightningModule):
 
     def training_epoch_end(self, outputs):
         f1_scores = []
-        # loss = []
+        loss = []
 
         ## V1
         # for output in outputs:
@@ -139,7 +139,8 @@ class MultiClassModel(pl.LightningModule):
         
         ## V2
         for output in outputs:
-            # print(output)
+            # print(output['F1'])
+            # print(output['loss'].cpu().detach().numpy())
             ## output
             ## {'loss': tensor(0.0489, device='cuda:0'), 'F1': 1.0, 'labels': tensor([[0, 1, 0],
             ## [1, 0, 0],
@@ -152,22 +153,37 @@ class MultiClassModel(pl.LightningModule):
             ## [0, 0, 1],
             ## [1, 0, 0]], device='cuda:0')}
 
+            ## ax.plot(x_arr, model_sum[0].cpu().detach().numpy(), '-o', label='Train Loss')
+            ## https://matplotlib-org.translate.goog/stable/api/_as_gen/matplotlib.pyplot.plot.html?_x_tr_sl=en&_x_tr_tl=id&_x_tr_hl=id&_x_tr_pto=sc
+
+            ## '-o' artinya penanda o
+
             ## Nilai F1 Score training
             f1_s = output['F1']
-            # loss_s = output['loss']
+            loss_s = output['loss'].cpu().detach().numpy()
             f1_scores.append(f1_s)
-            # loss.append(loss_s)
+            loss.append(loss_s)
 
         ## Jumlah epoch
         # epochs = range(1,11)
         epochs = range(len(f1_scores))
 
         ## Plot nilai F1 Score
-        plt.plot(epochs, f1_scores)
-        # plt.plot(epochs, loss, 'r', label='Loss')
-        plt.title('Training F1 Score')
-        plt.xlabel('Epochs')
-        plt.ylabel('F1 Score')
+        plt.plot(epochs, f1_scores, 'b', label='F1 Score')
+        plt.plot(epochs, loss, 'r', label='Loss')
+        plt.xlabel('iterations')
+        # plt.ylabel('F1 Score')
+
+        ## Put a legend to the right of the current axis
+        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+        ##plt.legend(bbox_to_anchor=(1.1, 1.05))
+        ##plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+        ## Put a legend below current axis
+        ##plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
+        ##https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
+
+        plt.title('Training F1 Score and Loss')
         plt.show()
         plt.savefig('f1_score.png') # menyimpan gambar
 
