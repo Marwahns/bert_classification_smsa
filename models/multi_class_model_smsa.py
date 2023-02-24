@@ -1,5 +1,7 @@
 import random
 
+from statistics import mean
+
 import torch
 import torch.nn as nn
 
@@ -13,6 +15,7 @@ from torchmetrics.classification import MulticlassAccuracy, MulticlassF1Score, P
 from sklearn.metrics import f1_score
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 
 class MultiClassModel(pl.LightningModule):
     def __init__(self,
@@ -43,6 +46,9 @@ class MultiClassModel(pl.LightningModule):
         #                   multidim_average = "global",
         #                   num_classes = self.num_classes)
         # self.precission_recall = PrecisionRecallCurve(task = "multiclass", num_classes = self.num_classes)
+
+        self.train_f1_score = []
+        self.train_loss_score = []
 
     ## Model
     def forward(self, input_ids):
@@ -129,53 +135,66 @@ class MultiClassModel(pl.LightningModule):
 
     def training_epoch_end(self, outputs):
         f1_scores = []
-        loss = []
+        loss_scores = []
 
-        ## V1
-        # for output in outputs:
-        #     for f1_s in output["F1"]:
-        #         f1_scores.append(f1_s)
-        # plt.plot(f1_scores, color='r')
-        
-        ## V2
         for output in outputs:
-            # print(output['F1'])
-            # print(output['loss'].cpu().detach().numpy())
-            ## output
-            ## {'loss': tensor(0.0489, device='cuda:0'), 'F1': 1.0, 'labels': tensor([[0, 1, 0],
-            ## [1, 0, 0],
-            ## [1, 0, 0],
-            ## [1, 0, 0],
-            ## [1, 0, 0],
-            ## [1, 0, 0],
-            ## [1, 0, 0],
-            ## [0, 0, 1],
-            ## [0, 0, 1],
-            ## [1, 0, 0]], device='cuda:0')}
+            f1_scores.append(output['F1'])
+            loss_scores.append(output['loss'].detach().cpu().item())
+            #.cpu().detach().numpy()
 
-            ## ax.plot(x_arr, model_sum[0].cpu().detach().numpy(), '-o', label='Train Loss')
-            ## https://matplotlib-org.translate.goog/stable/api/_as_gen/matplotlib.pyplot.plot.html?_x_tr_sl=en&_x_tr_tl=id&_x_tr_hl=id&_x_tr_pto=sc
-
-            ## '-o' artinya penanda o
-
-            ## Nilai F1 Score training
-            f1_s = output['F1']
-            loss_s = output['loss'].cpu().detach().numpy()
-            f1_scores.append(f1_s)
-            loss.append(loss_s)
-
+        self.train_f1_score.append(mean(f1_scores))
+        self.train_loss_score.append(mean(loss_scores))
         ## Jumlah epoch
-        # epochs = range(1,11)
-        epochs = range(len(f1_scores))
+        # epochs = range(len(f1_scores))
 
-        ## Plot nilai F1 Score
-        plt.plot(epochs, f1_scores, 'b', label='F1 Score')
-        plt.plot(epochs, loss, 'r', label='Loss')
-        plt.xlabel('Epoch(Number of Sentences)')
+        f1_fig, f1_ax = plt.subplots()
+        f1_ax.set_xlabel('epoch')
+        f1_ax.set_ylabel('f1 micro')
+        f1_ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        f1_ax.plot(self.train_f1_score, marker="o", mfc='green', mec='yellow', ms='7')
+
+        for x_epoch, y_f1_sc in enumerate(self.train_f1_score):
+            f1_sc_lbl = "{:.2f}".format(y_f1_sc)
+
+        ## {:.2f} = 2 decimal places
+
+            f1_ax.annotate(f1_sc_lbl, 
+                           (x_epoch, y_f1_sc),
+                           textcoords="offset points",
+                           xytext=(0,9),
+                           ha='center',
+                           arrowprops=dict(arrowstyle="->", color='black'))
+        
+        f1_fig.savefig("train_f1_scores.png")
+        
+        loss_fig, loss_ax = plt.subplots()
+        
+        loss_ax.set_xlabel('epoch')
+        loss_ax.set_ylabel('loss')
+        loss_ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        loss_ax.plot(self.train_loss_score, color='r', marker="o", mfc='yellow', mec='blue', ms='7')
+
+        plt.title('F1-Score and Loss of Training')
+
+        for x_epoch, y_loss_sc in enumerate(self.train_loss_score):
+            y_loss_lbl = "{:.2f}".format(y_loss_sc)
+            
+            loss_ax.annotate(y_loss_lbl, 
+                             (x_epoch, y_loss_sc),
+                             textcoords="offset points",
+                             xytext=(0,9),
+                             ha='center',
+                             arrowprops=dict(arrowstyle="->", color='black'))
+            loss_ax.plot(x_epoch, y_loss_sc, color="black", linewidth=1)
+
+        loss_fig.savefig("train_loss_scores.png")
+        # plt.plot(f1_scores, 'b', label='F1 Score')
+        # plt.plot(loss_scores, 'r', label='Loss')
+        # plt.xlabel('Epoch(Number of Sentences)')
         # plt.ylabel('F1 Score')
 
         ## Put a legend to the right of the current axis
-        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        # plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
         ##plt.legend(bbox_to_anchor=(1.1, 1.05))
         ##plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
@@ -183,9 +202,9 @@ class MultiClassModel(pl.LightningModule):
         ##plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
         ##https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
 
-        plt.title('Training F1 Score and Loss')
-        plt.show()
-        plt.savefig('f1_score.png') # menyimpan gambar
+        # plt.title('Training F1 Score and Loss')
+        # plt.show()
+        # plt.savefig('f1_score.png') # menyimpan gambar
 
         # labels = []
         # predictions = []
