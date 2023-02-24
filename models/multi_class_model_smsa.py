@@ -153,10 +153,10 @@ class MultiClassModel(pl.LightningModule):
         f1_ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
         f1_ax.plot(self.train_f1_score, marker="o", mfc='green', mec='yellow', ms='7')
 
+        ## {:.2f} = 2 decimal places
+        
         for x_epoch, y_f1_sc in enumerate(self.train_f1_score):
             f1_sc_lbl = "{:.2f}".format(y_f1_sc)
-
-        ## {:.2f} = 2 decimal places
 
             f1_ax.annotate(f1_sc_lbl, 
                            (x_epoch, y_f1_sc),
