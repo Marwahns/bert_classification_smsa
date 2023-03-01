@@ -26,6 +26,9 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
     
     def load_data(self, dataset_type = "train"):
         indonlu_data = load_dataset("indonlp/indonlu", "smsa", split = dataset_type)
+        # indonlu_groupby_label = indonlu_data.groupby("label", sort=False)
+        # print(indonlu_groupby_label)
+        # indonlu_groupby_label.get_group('1')
 
         ## Mengetahui kolom yang ada
         # print(indonlu_data)
@@ -38,7 +41,7 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
         for dt in indonlu_data:
             x = dt["text"]
             y = dt["label"]
-            # print(y)
+            print(y['1'].int)
             # max_length = Maximum panjang (jumlah kata) dalam kalimat
             # padding = menambahkan size (jumlah kata) dalam kalimat sesuai dengan size max length
             # truncation = pemotongan kata agar sama dengan max length
@@ -82,6 +85,7 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
         return DataLoader(
             dataset = self.train_data,
             batch_size = self.batch_size,
+            ## shuffle akan mengacak sebuah list yang menjadi parameter
             shuffle = True,
             num_workers = 4
         )

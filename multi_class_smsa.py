@@ -40,8 +40,9 @@ if __name__ == "__main__":
         accelerator = args.accelerator,
         num_nodes = args.num_nodes,
         max_epochs = args.max_epochs,
-        default_root_dir = "checkpoints/class_nlu_emot",
+        default_root_dir = "checkpoints/class_nlu_smsa",
         logger = logger
     )
 
     trainer.fit(model, datamodule = dm)
+    trainer.test(datamodule = dm, ckpt_path = 'best')
