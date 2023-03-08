@@ -41,7 +41,6 @@ class PreprocessorIndoNLU(pl.LightningDataModule):
         for dt in indonlu_data:
             x = dt["text"]
             y = dt["label"]
-            print(y['1'].int)
             # max_length = Maximum panjang (jumlah kata) dalam kalimat
             # padding = menambahkan size (jumlah kata) dalam kalimat sesuai dengan size max length
             # truncation = pemotongan kata agar sama dengan max length
